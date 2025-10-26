@@ -23,25 +23,37 @@ The I2S mode allows you to:
 
 ### Wiring Example (74HC595)
 
+**FluidNC/Jackpot Compatible Pin Configuration:**
+
 ```
-ESP32 GPIO 26 (I2S_WS)   -> 74HC595 Pin 12 (RCLK / Storage Register Clock)
-ESP32 GPIO 27 (I2S_BCK)  -> 74HC595 Pin 11 (SRCLK / Shift Register Clock)
-ESP32 GPIO 32 (I2S_DATA) -> 74HC595 Pin 14 (SER / Serial Data Input)
+ESP32 GPIO 17 (I2S_WS)   -> 74HC595 Pin 12 (RCLK / Storage Register Clock)
+ESP32 GPIO 22 (I2S_BCK)  -> 74HC595 Pin 11 (SRCLK / Shift Register Clock)
+ESP32 GPIO 21 (I2S_DATA) -> 74HC595 Pin 14 (SER / Serial Data Input)
 
 74HC595 Pin 10 (SRCLR)   -> VCC (disable clear)
 74HC595 Pin 13 (OE)      -> GND (enable output)
 74HC595 Pin 16 (VCC)     -> 3.3V or 5V
 74HC595 Pin 8 (GND)      -> GND
 
-Output mapping (default):
-74HC595 QA (Pin 15) -> STEP 0
+Output mapping (FluidNC/Jackpot compatible):
+74HC595 QA (Pin 15) -> DISABLE 0 (optional)
 74HC595 QB (Pin 1)  -> DIR 0
-74HC595 QC (Pin 2)  -> STEP 1
-74HC595 QD (Pin 3)  -> DIR 1
-74HC595 QE (Pin 4)  -> STEP 2
-74HC595 QF (Pin 5)  -> DIR 2
+74HC595 QC (Pin 2)  -> STEP 0
+74HC595 QD (Pin 3)  -> (unused)
+74HC595 QE (Pin 4)  -> DIR 1
+74HC595 QF (Pin 5)  -> STEP 1
+74HC595 QG (Pin 6)  -> (unused)
+74HC595 QH (Pin 7)  -> DISABLE 1 (optional)
+
+Second 74HC595 (if chained):
+QA (Pin 15) -> DISABLE 2 (optional)
+QB (Pin 1)  -> DIR 2
+QC (Pin 2)  -> STEP 2
+QD-QH       -> Available for more axes or outputs
 ...
 ```
+
+Note: This pin configuration matches FluidNC/Jackpot CNC controller standard layout.
 
 ### Chaining Multiple Shift Registers
 
@@ -65,21 +77,29 @@ This gives you 32 outputs total (4 ICs x 8 bits).
 #define USE_I2S_OUT
 
 #ifdef USE_I2S_OUT
-    // I2S pins
-    #define I2S_WS_PIN      26  // RCLK (Register/Latch Clock)
-    #define I2S_BCK_PIN     27  // SRCLK (Shift Register Clock)
-    #define I2S_DATA_PIN    32  // SER (Serial Data)
+    // I2S pins (FluidNC/Jackpot standard)
+    #define I2S_WS_PIN      17  // RCLK (Register/Latch Clock)
+    #define I2S_BCK_PIN     22  // SRCLK (Shift Register Clock)
+    #define I2S_DATA_PIN    21  // SER (Serial Data)
     
     // Pulse width: 1, 2, or 4 microseconds
     #define I2S_PULSE_US    2
     
-    // Bit mappings (shift register bit positions 0-31)
-    #define I2S_STEP_0_BIT  0
+    // Bit mappings (FluidNC/Jackpot compatible layout)
+    // Motor 0 (X axis)
+    #define I2S_STEP_0_BIT  2
     #define I2S_DIR_0_BIT   1
-    #define I2S_STEP_1_BIT  2
-    #define I2S_DIR_1_BIT   3
-    #define I2S_STEP_2_BIT  4
-    #define I2S_DIR_2_BIT   5
+    #define I2S_DIS_0_BIT   0   // Optional disable pin
+    
+    // Motor 1 (Y axis)
+    #define I2S_STEP_1_BIT  5
+    #define I2S_DIR_1_BIT   4
+    #define I2S_DIS_1_BIT   7   // Optional disable pin
+    
+    // Motor 2 (Z axis)
+    #define I2S_STEP_2_BIT  10
+    #define I2S_DIR_2_BIT   9
+    #define I2S_DIS_2_BIT   8   // Optional disable pin
 #endif
 ```
 
@@ -145,7 +165,14 @@ When I2S mode is enabled, the default step/dir GPIO pins (12, 13, 16, 17, 21, 22
 - Repurpose them for additional inputs/outputs
 - Use them for other features
 
-The I2S pins (26, 27, 32) **must not** be used for inputs when I2S is enabled, as they become I2S peripheral outputs.
+**I2S Pins (FluidNC/Jackpot Configuration):**
+- GPIO 17: Normally used for DIR_1 in direct GPIO mode - **becomes I2S_WS in I2S mode**
+- GPIO 21: Normally used for STEP_2 in direct GPIO mode - **becomes I2S_DATA in I2S mode**
+- GPIO 22: Normally used for DIR_2 in direct GPIO mode - **becomes I2S_BCK in I2S mode**
+
+This means GPIO pins 12, 13, 16 become available for other uses when I2S is enabled.
+
+**Advantage:** No pin conflicts with inputs when using FluidNC/Jackpot standard pin configuration!
 
 ## Performance
 

@@ -100,31 +100,46 @@
 /*==================================================================*/
 /* I2S Output Configuration (for shift register control)           */
 /* Uncomment USE_I2S_OUT to enable I2S mode for step/dir signals   */
+/* Pin configuration matches FluidNC/Jackpot standard layout       */
 /*==================================================================*/
 
 // #define USE_I2S_OUT
 
 #ifdef USE_I2S_OUT
-    // I2S pins for shift register control (e.g., 74HC595)
-    #define I2S_WS_PIN      26  // RCLK (Register/Latch Clock)
-    #define I2S_BCK_PIN     27  // SRCLK (Shift Register Clock)
-    #define I2S_DATA_PIN    32  // SER (Serial Data)
+    // I2S pins for shift register control (74HC595 compatible)
+    // FluidNC/Jackpot standard pin assignment
+    #define I2S_WS_PIN      17  // RCLK (Register/Latch Clock)
+    #define I2S_BCK_PIN     22  // SRCLK (Shift Register Clock)
+    #define I2S_DATA_PIN    21  // SER (Serial Data)
     
     // I2S pulse width in microseconds (1, 2, or 4)
     #define I2S_PULSE_US    2
     
     // I2S pin mapping for step/dir signals
-    // Map to shift register bit positions (0-31)
-    #define I2S_STEP_0_BIT  0
-    #define I2S_DIR_0_BIT   1
-    #define I2S_STEP_1_BIT  2
-    #define I2S_DIR_1_BIT   3
-    #define I2S_STEP_2_BIT  4
-    #define I2S_DIR_2_BIT   5
+    // FluidNC/Jackpot standard bit assignment:
+    // Bits 0,1,2 = Motor 0 (disable, dir, step)
+    // Bits 3,4,5,6 = Motor 1 (unused, dir, step, disable)
+    // Bits 7,8,9,10 = Motor 2 (disable, dir, step, unused)
+    
+    // Axis 0 (X)
+    #define I2S_STEP_0_BIT  2   // Motor 0 step
+    #define I2S_DIR_0_BIT   1   // Motor 0 dir
+    #define I2S_DIS_0_BIT   0   // Motor 0 disable (optional)
+    
+    // Axis 1 (Y)
+    #define I2S_STEP_1_BIT  5   // Motor 1 step
+    #define I2S_DIR_1_BIT   4   // Motor 1 dir
+    #define I2S_DIS_1_BIT   7   // Motor 1 disable (optional)
+    
+    // Axis 2 (Z)
+    #define I2S_STEP_2_BIT  10  // Motor 2 step
+    #define I2S_DIR_2_BIT   9   // Motor 2 dir
+    #define I2S_DIS_2_BIT   8   // Motor 2 disable (optional)
     
     // Optional: Map outputs to I2S as well
-    // #define I2S_OUT_00_BIT  6
-    // #define I2S_OUT_01_BIT  7
+    // Bits 11-31 available for digital outputs, PWM, etc.
+    // #define I2S_OUT_00_BIT  11
+    // #define I2S_OUT_01_BIT  12
     // etc...
 #endif
 

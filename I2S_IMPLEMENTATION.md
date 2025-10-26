@@ -59,22 +59,32 @@ In `src/hardware.h`:
 #define USE_I2S_OUT
 
 #ifdef USE_I2S_OUT
-    // I2S pins (connect to 74HC595)
-    #define I2S_WS_PIN      26  // -> RCLK
-    #define I2S_BCK_PIN     27  // -> SRCLK
-    #define I2S_DATA_PIN    32  // -> SER
+    // I2S pins (FluidNC/Jackpot standard configuration)
+    #define I2S_WS_PIN      17  // -> RCLK
+    #define I2S_BCK_PIN     22  // -> SRCLK
+    #define I2S_DATA_PIN    21  // -> SER
     
     #define I2S_PULSE_US    2   // 1, 2, or 4 μs
     
-    // Map step/dir to shift register bits
-    #define I2S_STEP_0_BIT  0   // 74HC595 QA
+    // FluidNC/Jackpot compatible bit mapping
+    // Motor 0 (X axis)
+    #define I2S_STEP_0_BIT  2   // 74HC595 QC
     #define I2S_DIR_0_BIT   1   // 74HC595 QB
-    #define I2S_STEP_1_BIT  2   // 74HC595 QC
-    #define I2S_DIR_1_BIT   3   // 74HC595 QD
-    #define I2S_STEP_2_BIT  4   // 74HC595 QE
-    #define I2S_DIR_2_BIT   5   // 74HC595 QF
+    #define I2S_DIS_0_BIT   0   // 74HC595 QA (optional)
+    
+    // Motor 1 (Y axis)
+    #define I2S_STEP_1_BIT  5   // 74HC595 QF
+    #define I2S_DIR_1_BIT   4   // 74HC595 QE
+    #define I2S_DIS_1_BIT   7   // 74HC595 QH (optional)
+    
+    // Motor 2 (Z axis) - requires 2nd IC
+    #define I2S_STEP_2_BIT  10  // 2nd 74HC595 QC
+    #define I2S_DIR_2_BIT   9   // 2nd 74HC595 QB
+    #define I2S_DIS_2_BIT   8   // 2nd 74HC595 QA (optional)
 #endif
 ```
+
+**Note:** This configuration is compatible with FluidNC/Jackpot CNC controllers.
 
 ## Testing Recommendations
 
