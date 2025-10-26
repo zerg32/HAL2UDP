@@ -23,6 +23,7 @@ The LinuxCNC HAL pins' and parameters' names have been changed for a better unde
 * 7 input pins
 * 6 output pins, any can be pwm signal
 * step frequency up to 100 kHz
+* **Optional I2S shift register mode** - compatible with [Jackpot CNC Controller](https://docs.v1e.com/electronics/jackpot/) hardware (see [I2S_README.md](I2S_README.md))
 ### Install
 Clone/Copy this repository and open it with platformIO
 ### Settings
