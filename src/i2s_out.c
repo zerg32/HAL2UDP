@@ -45,33 +45,20 @@ static inline void i2s_gpio_setup_pin(uint8_t pin)
     }
 }
 
-// Shift out current port data by bit-banging. Latches by toggling WS.
-// Note: This is a slow fallback and not suitable for realtime high-rate use.
-static void i2s_out_gpio_shiftout(uint32_t port_data)
-{
-    if (i2s_out_ws_pin == 255 || i2s_out_bck_pin == 255 || i2s_out_data_pin == 255) return;
-    gpio_set_level(i2s_out_ws_pin, 0);
-    for (int i = 0; i < I2S_OUT_NUM_BITS; ++i) {
-        uint32_t bit = (port_data >> (I2S_OUT_NUM_BITS - 1 - i)) & 1U;
-        gpio_set_level(i2s_out_data_pin, bit);
-        // pulse the bit clock
-        gpio_set_level(i2s_out_bck_pin, 1);
-        gpio_set_level(i2s_out_bck_pin, 0);
-    }
-    // latch
-    gpio_set_level(i2s_out_ws_pin, 1);
-}
+// Note: ISR-only I2S FIFO writes are used. GPIO bit-bang fallback removed
+// to keep the implementation minimal and focused on the high-performance path.
 
 // No DMA task: i2s_out_write writes directly to I2S FIFO from ISR for minimal latency.
 
 void i2s_out_stop(void)
 {
     if (!i2s_out_initialized) return;
-    // stop I2S driver
+    // Flush current state into FIFO (byte-swapped for MSB-first) then stop
+    if (i2s_out_initialized) {
+        uint32_t v = __builtin_bswap32(i2s_out_port_data);
+        I2S0.fifo_wr = v;
+    }
     i2s_stop(I2S_NUM_0);
-    // final shiftout using GPIO to ensure last state latched
-    gpio_set_level(i2s_out_ws_pin, 0);
-    i2s_out_gpio_shiftout(i2s_out_port_data);
 }
 
 void i2s_out_start(void)
