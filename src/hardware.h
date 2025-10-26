@@ -103,7 +103,7 @@
 /* Pin configuration matches FluidNC/Jackpot standard layout       */
 /*==================================================================*/
 
-// #define USE_I2S_OUT
+#define USE_I2S_OUT
 
 #ifdef USE_I2S_OUT
     // I2S pins for shift register control (74HC595 compatible)

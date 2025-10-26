@@ -15,7 +15,7 @@
 #include <soc/gpio_periph.h>
 #include <driver/gpio.h>
 #include <rom/ets_sys.h>
-#include <driver/i2s.h>
+#include <driver/i2s_std.h>
 
 // Minimal GPIO-backed fallback implementation for I2S-like shift register support.
 // This avoids dependency on low-level i2s_ll APIs that may not be available in
@@ -33,6 +33,9 @@ static uint8_t i2s_out_ws_pin = 255;
 static uint8_t i2s_out_bck_pin = 255;
 static uint8_t i2s_out_data_pin = 255;
 static uint32_t i2s_frame_us = 2; // Default 2us pulse width
+
+// Modern I2S STD channel handle (TX)
+static i2s_chan_handle_t i2s_tx_chan = NULL;
 
 // (No DMA task — ISR writes directly to I2S FIFO)
 
@@ -53,21 +56,20 @@ static inline void i2s_gpio_setup_pin(uint8_t pin)
 void i2s_out_stop(void)
 {
     if (!i2s_out_initialized) return;
-    // Flush current state into FIFO (byte-swapped for MSB-first) then stop
-    if (i2s_out_initialized) {
+    // Flush current state into FIFO (byte-swapped for MSB-first) then disable channel
+    if (i2s_tx_chan) {
         uint32_t v = __builtin_bswap32(i2s_out_port_data);
         I2S0.fifo_wr = v;
+        i2s_channel_disable(i2s_tx_chan);
     }
-    i2s_stop(I2S_NUM_0);
 }
 
 void i2s_out_start(void)
 {
     if (!i2s_out_initialized) return;
-    // start I2S driver
-    i2s_start(I2S_NUM_0);
-    // perform an initial FIFO write so hardware has current state
-    {
+    // Enable the TX channel and pre-fill FIFO with current state
+    if (i2s_tx_chan) {
+        i2s_channel_enable(i2s_tx_chan);
         uint32_t v = __builtin_bswap32(i2s_out_port_data);
         I2S0.fifo_wr = v;
     }
@@ -124,33 +126,32 @@ int i2s_out_init(i2s_out_init_t* init_param)
     i2s_out_initialized = 1;
 
     // initial output
-    // Install and configure I2S driver for DMA-based transmit
+    // Use modern I2S STD channel API to configure TX channel; ISR will still
+    // write directly to the I2S FIFO for lowest latency.
     {
-        i2s_config_t i2s_cfg = {
-            .mode = I2S_MODE_MASTER | I2S_MODE_TX,
-            .sample_rate = (int)(1000000U / i2s_frame_us),
-            .bits_per_sample = I2S_BITS_PER_SAMPLE_32BIT,
-            .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
-            .communication_format = I2S_COMM_FORMAT_I2S_MSB,
-            .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
-            .dma_buf_count = 2,
-            .dma_buf_len = 64,
-            .tx_desc_auto_clear = true,
-            .use_apll = false
-        };
-
-        i2s_pin_config_t pin_cfg = {
-            .bck_io_num = i2s_out_bck_pin,
-            .ws_io_num = i2s_out_ws_pin,
-            .data_out_num = i2s_out_data_pin,
-            .data_in_num = I2S_PIN_NO_CHANGE
-        };
-
-        // install driver
-        i2s_driver_install(I2S_NUM_0, &i2s_cfg, 0, NULL);
-        i2s_set_pin(I2S_NUM_0, &pin_cfg);
-
-        // (ISR-only mode: no DMA task created)
+        // Allocate a TX channel (auto controller selection)
+        i2s_chan_config_t chan_cfg = I2S_CHANNEL_DEFAULT_CONFIG(I2S_NUM_AUTO, I2S_ROLE_MASTER);
+        if (i2s_new_channel(&chan_cfg, &i2s_tx_chan, NULL) == ESP_OK) {
+            // Configure standard mode (clock/slot/gpio)
+            int sample_rate = (int)(1000000U / i2s_frame_us);
+            i2s_std_config_t std_cfg = {
+                .clk_cfg  = I2S_STD_CLK_DEFAULT_CONFIG(sample_rate),
+                .slot_cfg = I2S_STD_MSB_SLOT_DEFAULT_CONFIG(I2S_DATA_BIT_WIDTH_32BIT, I2S_SLOT_MODE_STEREO),
+                .gpio_cfg = {
+                    .mclk = I2S_GPIO_UNUSED,
+                    .bclk = i2s_out_bck_pin,
+                    .ws   = i2s_out_ws_pin,
+                    .dout = i2s_out_data_pin,
+                    .din  = I2S_GPIO_UNUSED,
+                    .invert_flags = {
+                        .mclk_inv = false,
+                        .bclk_inv = false,
+                        .ws_inv   = false,
+                    },
+                },
+            };
+            i2s_channel_init_std_mode(i2s_tx_chan, &std_cfg);
+        }
     }
 
     i2s_out_start();
