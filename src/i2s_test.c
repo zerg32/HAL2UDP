@@ -26,16 +26,22 @@ void i2s_test_task(void* arg)
 
     for (;;) {
         // Motor 3
-        STEP_3_H;
+        // Toggle marker high, then perform the I2S write so you can measure
+        // the time taken by the ISR/write on an oscilloscope.
+        OUT_00_H;                  // marker start
+        STEP_3_H;                  // step bit set (writes into I2S FIFO)
+        OUT_00_L;                  // marker after write
         vTaskDelay(pdMS_TO_TICKS(pulse_ms));
         STEP_3_L;
 
         vTaskDelay(pdMS_TO_TICKS(period_ms - pulse_ms));
 
-        // Motor 4 (phase-shifted)
-        STEP_4_H;
-        vTaskDelay(pdMS_TO_TICKS(pulse_ms));
-        STEP_4_L;
+    // Motor 4 (phase-shifted)
+    OUT_00_H;
+    STEP_4_H;
+    OUT_00_L;
+    vTaskDelay(pdMS_TO_TICKS(pulse_ms));
+    STEP_4_L;
 
         vTaskDelay(pdMS_TO_TICKS(period_ms - pulse_ms));
     }
