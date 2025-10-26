@@ -4,13 +4,15 @@ loadrt  [EMCMOT]EMCMOT servo_period_nsec=[EMCMOT]SERVO_PERIOD num_joints=[KINS]J
 loadrt  threads name1=udp-thread period1=[EMCMOT]UDP_PERIOD fp1=1
 loadrt  udp
 loadrt  logic                        names=ready personality=0x102
-loadrt  pid                          names=pid.x,pid.y,pid.z
+loadrt  pid                          names=pid.x,pid.y,pid.z,pid.a,pid.b
 
 addf    udp                          udp-thread
 
 addf    pid.x.do-pid-calcs           servo-thread
 addf    pid.y.do-pid-calcs           servo-thread
 addf    pid.z.do-pid-calcs           servo-thread
+addf    pid.a.do-pid-calcs           servo-thread
+addf    pid.b.do-pid-calcs           servo-thread
 addf    motion-command-handler       servo-thread
 addf    motion-controller            servo-thread
 addf    ready                        servo-thread
@@ -26,6 +28,14 @@ setp    udp.stepgen.2.maxaccel       [JOINT_2]STEPGEN_MAXACCEL
 setp    udp.stepgen.0.position-scale [JOINT_0]SCALE
 setp    udp.stepgen.1.position-scale [JOINT_1]SCALE
 setp    udp.stepgen.2.position-scale [JOINT_2]SCALE
+setp    udp.stepgen.3.position-scale [JOINT_3]SCALE
+setp    udp.stepgen.4.position-scale [JOINT_4]SCALE
+
+setp    udp.stepgen.3.dirsetup       [JOINT_3]STEPGEN_DIRSETUP
+setp    udp.stepgen.4.dirsetup       [JOINT_4]STEPGEN_DIRSETUP
+
+setp    udp.stepgen.3.maxaccel       [JOINT_3]STEPGEN_MAXACCEL
+setp    udp.stepgen.4.maxaccel       [JOINT_4]STEPGEN_MAXACCEL
 
 setp    pid.x.Pgain                  [JOINT_0]PID_GAIN_P
 setp    pid.x.Igain                  [JOINT_0]PID_GAIN_I
@@ -81,6 +91,42 @@ setp    pid.z.maxcmdDDD              [JOINT_2]PID_MAXCMD_DDD
 setp    pid.z.maxoutput              [JOINT_2]PID_MAXOUTPUT
 setp    pid.z.error-previous-target  [JOINT_2]PID_EPT
 
+setp    pid.a.Pgain                  [JOINT_3]PID_GAIN_P
+setp    pid.a.Igain                  [JOINT_3]PID_GAIN_I
+setp    pid.a.Dgain                  [JOINT_3]PID_GAIN_D
+setp    pid.a.bias                   [JOINT_3]PID_BIAS
+setp    pid.a.FF0                    [JOINT_3]PID_FF0
+setp    pid.a.FF1                    [JOINT_3]PID_FF1
+setp    pid.a.FF2                    [JOINT_3]PID_FF2
+setp    pid.a.FF3                    [JOINT_3]PID_FF3
+setp    pid.a.deadband               [JOINT_3]PID_DEADBAND
+setp    pid.a.maxerror               [JOINT_3]PID_MAXERROR
+setp    pid.a.maxerrorI              [JOINT_3]PID_MAXERROR_I
+setp    pid.a.maxerrorD              [JOINT_3]PID_MAXERROR_D
+setp    pid.a.maxcmdD                [JOINT_3]PID_MAXCMD_D
+setp    pid.a.maxcmdDD               [JOINT_3]PID_MAXCMD_DD
+setp    pid.a.maxcmdDDD              [JOINT_3]PID_MAXCMD_DDD
+setp    pid.a.maxoutput              [JOINT_3]PID_MAXOUTPUT
+setp    pid.a.error-previous-target  [JOINT_3]PID_EPT
+
+setp    pid.b.Pgain                  [JOINT_4]PID_GAIN_P
+setp    pid.b.Igain                  [JOINT_4]PID_GAIN_I
+setp    pid.b.Dgain                  [JOINT_4]PID_GAIN_D
+setp    pid.b.bias                   [JOINT_4]PID_BIAS
+setp    pid.b.FF0                    [JOINT_4]PID_FF0
+setp    pid.b.FF1                    [JOINT_4]PID_FF1
+setp    pid.b.FF2                    [JOINT_4]PID_FF2
+setp    pid.b.FF3                    [JOINT_4]PID_FF3
+setp    pid.b.deadband               [JOINT_4]PID_DEADBAND
+setp    pid.b.maxerror               [JOINT_4]PID_MAXERROR
+setp    pid.b.maxerrorI              [JOINT_4]PID_MAXERROR_I
+setp    pid.b.maxerrorD              [JOINT_4]PID_MAXERROR_D
+setp    pid.b.maxcmdD                [JOINT_4]PID_MAXCMD_D
+setp    pid.b.maxcmdDD               [JOINT_4]PID_MAXCMD_DD
+setp    pid.b.maxcmdDDD              [JOINT_4]PID_MAXCMD_DDD
+setp    pid.b.maxoutput              [JOINT_4]PID_MAXOUTPUT
+setp    pid.b.error-previous-target  [JOINT_4]PID_EPT
+
 #======= X axis ===========================
 
 net     x-pos-cmd      joint.0.motor-pos-cmd       pid.x.command       udp.stepgen.0.position-cmd
@@ -105,6 +151,22 @@ net     z-pos-fb       udp.stepgen.2.position-fb   pid.z.feedback      joint.2.m
 net     z-vel-fb       udp.stepgen.2.velocity-fb   pid.z.feedback-deriv
 net     z-vel-cmd      pid.z.output                udp.stepgen.2.velocity-cmd
 
+#======= A axis ===========================
+
+net     a-pos-cmd      joint.3.motor-pos-cmd       pid.a.command       udp.stepgen.3.position-cmd
+net     a-vel-cmd-pre  joint.3.vel-cmd             pid.a.command-deriv
+net     a-pos-fb       udp.stepgen.3.position-fb   pid.a.feedback      joint.3.motor-pos-fb
+net     a-vel-fb       udp.stepgen.3.velocity-fb   pid.a.feedback-deriv
+net     a-vel-cmd      pid.a.output                udp.stepgen.3.velocity-cmd
+
+#======= B axis ===========================
+
+net     b-pos-cmd      joint.4.motor-pos-cmd       pid.b.command       udp.stepgen.4.position-cmd
+net     b-vel-cmd-pre  joint.4.vel-cmd             pid.b.command-deriv
+net     b-pos-fb       udp.stepgen.4.position-fb   pid.b.feedback      joint.4.motor-pos-fb
+net     b-vel-fb       udp.stepgen.4.velocity-fb   pid.b.feedback-deriv
+net     b-vel-cmd      pid.b.output                udp.stepgen.4.velocity-cmd
+
 #======= Home ==============================
 
 net     x-home         udp.in.3                    joint.0.home-sw-in
@@ -119,7 +181,7 @@ net     all-ready      ready.and                   iocontrol.0.emc-enable-in
 
 #======= Machine on ========================
 
-net     machine-is-on  halui.machine.is-on         udp.out.0  udp.enable  pid.x.enable  pid.y.enable  pid.z.enable
+net     machine-is-on  halui.machine.is-on         udp.out.0  udp.enable  pid.x.enable  pid.y.enable  pid.z.enable  pid.a.enable  pid.b.enable
 
 #======= Spindle ===========================
 
