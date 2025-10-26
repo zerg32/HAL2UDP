@@ -11,6 +11,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
+#include <esp_attr.h>
 
 // Number of I2S output pins available (32 bits in shift register)
 #define I2S_OUT_NUM_BITS 32
@@ -51,14 +52,14 @@ int i2s_out_init(i2s_out_init_t* init_param);
   pin: I2S pin number (0..31)
   Returns: 0 or 1
 */
-uint8_t i2s_out_read(uint8_t pin);
+uint8_t IRAM_ATTR i2s_out_read(uint8_t pin);
 
 /*
   Set a bit in the internal pin state (queued for output via I2S FIFO)
   pin: I2S pin number (0..31)
   val: bit value (0 or non-zero)
 */
-void i2s_out_write(uint8_t pin, uint8_t val);
+void IRAM_ATTR i2s_out_write(uint8_t pin, uint8_t val);
 
 /*
   Delay until I2S shift register has updated

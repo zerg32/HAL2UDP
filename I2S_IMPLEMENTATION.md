@@ -81,6 +81,16 @@ In `src/hardware.h`:
     #define I2S_STEP_2_BIT  10  // 2nd 74HC595 QC
     #define I2S_DIR_2_BIT   9   // 2nd 74HC595 QB
     #define I2S_DIS_2_BIT   8   // 2nd 74HC595 QA (optional)
+#
+#    // Motor 3 (A)
+#    #define I2S_STEP_3_BIT  13  // 3rd 74HC595 QC
+#    #define I2S_DIR_3_BIT   12  // 3rd 74HC595 QB
+#    #define I2S_DIS_3_BIT   15  // 3rd 74HC595 QH (optional)
+#
+#    // Motor 4 (B)
+#    #define I2S_STEP_4_BIT  18  // 4th 74HC595 QC
+#    #define I2S_DIR_4_BIT   17  // 4th 74HC595 QB
+#    #define I2S_DIS_4_BIT   16  // 4th 74HC595 QA (optional)
 #endif
 ```
 

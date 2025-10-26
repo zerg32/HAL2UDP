@@ -11,7 +11,7 @@
 #include "hardware.h"
 #include "w5500.h"
 
-void IRAM_ATTR watchdog_task(void* arg)
+void watchdog_task(void* arg)
 {
     TickType_t xLastWakeTime = xTaskGetTickCount();
 
@@ -34,7 +34,7 @@ void IRAM_ATTR  w5500_socket_isr(void* arg)
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-void IRAM_ATTR commandHandler()
+void commandHandler()
 {
     if (cmd.control & CTRL_READY) {
 
@@ -106,7 +106,7 @@ void IRAM_ATTR commandHandler()
     }
 }
 
-void IRAM_ATTR comm_task(void* arg)
+void comm_task(void* arg)
 {
     xSemaphoreTake(startMutex, portMAX_DELAY);
 
@@ -150,8 +150,11 @@ void IRAM_ATTR comm_task(void* arg)
             } else
                 fb.vel[i] = 0.0f;
         }
-        uint8_t fb_buf[sizeof(fb)];
-        memcpy(&fb_buf, &fb, sizeof(fb));
+    uint8_t fb_buf[sizeof(fb)];
+    /* fb is volatile (written from ISR). Copy with an explicit cast to
+     * const void* to avoid discarding-qualifiers warning while keeping
+     * the copy semantics. */
+    memcpy(&fb_buf, (const void*)&fb, sizeof(fb));
 
         ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
 

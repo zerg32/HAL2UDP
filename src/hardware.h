@@ -141,6 +141,16 @@
     // #define I2S_OUT_00_BIT  11
     // #define I2S_OUT_01_BIT  12
     // etc...
+        // Additional Jackpot motors (A, B) - Motor 3 and Motor 4
+        // Motor 3 (A)
+        #define I2S_STEP_3_BIT  13  // Motor 3 step
+        #define I2S_DIR_3_BIT   12  // Motor 3 dir
+        #define I2S_DIS_3_BIT   15  // Motor 3 disable (optional)
+    
+        // Motor 4 (B)
+        #define I2S_STEP_4_BIT  18  // Motor 4 step
+        #define I2S_DIR_4_BIT   17  // Motor 4 dir
+        #define I2S_DIS_4_BIT   16  // Motor 4 disable (optional)
 #endif
 
 /*==================================================================*/

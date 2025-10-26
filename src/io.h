@@ -6,7 +6,7 @@
 
 #include "globals.h"
 
-void IRAM_ATTR outputHandler(void)
+void outputHandler(void)
 {
     static uint16_t last_pwm[6] = { 0 };
     uint8_t out = cmd.io;
@@ -49,7 +49,7 @@ void IRAM_ATTR outputHandler(void)
     }
 }
 
-void IRAM_ATTR inputHandler(void)
+void inputHandler(void)
 {
     uint8_t in = 0;
     if (IN_00) in = IO_00;

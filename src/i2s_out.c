@@ -16,6 +16,8 @@
 #include <driver/gpio.h>
 #include <rom/ets_sys.h>
 
+#ifdef USE_I2S_OUT
+
 // Global state
 static volatile uint32_t i2s_out_port_data = 0;
 static int i2s_out_initialized = 0;
@@ -273,3 +275,5 @@ int i2s_out_init(i2s_out_init_t* init_param) {
 
     return 0;
 }
+
+#endif /* USE_I2S_OUT */

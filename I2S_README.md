@@ -55,6 +55,29 @@ QD-QH       -> Available for more axes or outputs
 
 Note: This pin configuration matches FluidNC/Jackpot CNC controller standard layout.
 
+### Additional Motors (A, B)
+
+Jackpot uses additional motor driver outputs for A and B motors. If you chain more shift registers, map them like:
+
+```
+Second IC (additional bits):
+    QA (bit 8)  -> DISABLE 2 (optional)
+    QB (bit 9)  -> DIR 2
+    QC (bit 10) -> STEP 2
+
+Third IC:
+    QB (bit 12) -> DIR 3
+    QC (bit 13) -> STEP 3
+    QH (bit 15) -> DISABLE 3 (optional)
+
+Fourth IC:
+    QA (bit 16) -> DISABLE 4 (optional)
+    QB (bit 17) -> DIR 4
+    QC (bit 18) -> STEP 4
+```
+
+The HAL2UDP `src/hardware.h` includes defines for these additional bits if you wish to expose them.
+
 ### Chaining Multiple Shift Registers
 
 To drive more outputs, chain 74HC595s:

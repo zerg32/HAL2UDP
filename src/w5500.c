@@ -11,14 +11,14 @@ static const char* TAG = "W5500";
 static spi_device_handle_t spi_handle = NULL;
 static w5500_recv_t received = { 0 };
 
-static void IRAM_ATTR swap_u16(uint16_t* data) { *data = (*data >> 8) | (*data << 8); }
+static void swap_u16(uint16_t* data) { *data = (*data >> 8) | (*data << 8); }
 
 // construct 24 bit header: 16bit address + 5bit register block + 1bit read/write + 2bit transmit mode
-static inline uint32_t IRAM_ATTR make_header(const uint16_t address, const uint8_t block, const uint8_t rw, const uint8_t mode) {
+static inline uint32_t make_header(const uint16_t address, const uint8_t block, const uint8_t rw, const uint8_t mode) {
     return (((uint32_t)address) << 8) | ((uint32_t)(block | rw | mode));
 }
 
-static uint8_t IRAM_ATTR w5500_read_u8(const uint16_t addr, const uint8_t block) {
+static uint8_t w5500_read_u8(const uint16_t addr, const uint8_t block) {
     spi_transaction_t t = {
         .flags = SPI_TRANS_USE_RXDATA,
         .addr = make_header(addr, block, W5500_READ, W5500_MODE_FDM1),
@@ -28,7 +28,7 @@ static uint8_t IRAM_ATTR w5500_read_u8(const uint16_t addr, const uint8_t block)
     return t.rx_data[0];
 }
 
-static uint16_t IRAM_ATTR w5500_read_u16(const uint16_t addr, const uint8_t block) {
+static uint16_t w5500_read_u16(const uint16_t addr, const uint8_t block) {
     spi_transaction_t t = {
         .flags = SPI_TRANS_USE_RXDATA,
         .addr = make_header(addr, block, W5500_READ, W5500_MODE_FDM2),
@@ -38,7 +38,7 @@ static uint16_t IRAM_ATTR w5500_read_u16(const uint16_t addr, const uint8_t bloc
     return ((uint16_t)t.rx_data[0]) << 8 | (uint16_t)t.rx_data[1];
 }
 
-static void IRAM_ATTR w5500_read_buf(const uint16_t addr, const uint8_t block, uint8_t* buf, const uint16_t len) {
+static void w5500_read_buf(const uint16_t addr, const uint8_t block, uint8_t* buf, const uint16_t len) {
     spi_transaction_t t = {
         .addr = make_header(addr, block, W5500_READ, W5500_MODE_VDM),
         .length = len * 8,
@@ -47,7 +47,7 @@ static void IRAM_ATTR w5500_read_buf(const uint16_t addr, const uint8_t block, u
     spi_device_polling_transmit(spi_handle, &t);
 }
 
-static void IRAM_ATTR w5500_write_u8(const uint16_t addr, const uint8_t block, const uint8_t data) {
+static void w5500_write_u8(const uint16_t addr, const uint8_t block, const uint8_t data) {
     spi_transaction_t t = {
         .flags = SPI_TRANS_USE_TXDATA,
         .addr = make_header(addr, block, W5500_WRITE, W5500_MODE_FDM1),
@@ -57,7 +57,7 @@ static void IRAM_ATTR w5500_write_u8(const uint16_t addr, const uint8_t block, c
     spi_device_polling_transmit(spi_handle, &t);
 }
 
-static void IRAM_ATTR w5500_write_u16(const uint16_t addr, const uint8_t block, const uint16_t data) {
+static void w5500_write_u16(const uint16_t addr, const uint8_t block, const uint16_t data) {
     spi_transaction_t t = {
         .flags = SPI_TRANS_USE_TXDATA,
         .addr = make_header(addr, block, W5500_WRITE, W5500_MODE_FDM2),
@@ -68,7 +68,7 @@ static void IRAM_ATTR w5500_write_u16(const uint16_t addr, const uint8_t block, 
     spi_device_polling_transmit(spi_handle, &t);
 }
 
-static void IRAM_ATTR w5500_write_buf(const uint16_t addr, const uint8_t block, const uint8_t* buf, const uint16_t len) {
+static void w5500_write_buf(const uint16_t addr, const uint8_t block, const uint8_t* buf, const uint16_t len) {
     spi_transaction_t t = {
         .addr = make_header(addr, block, W5500_WRITE, W5500_MODE_VDM),
         .length = len * 8,
@@ -77,22 +77,22 @@ static void IRAM_ATTR w5500_write_buf(const uint16_t addr, const uint8_t block, 
     spi_device_polling_transmit(spi_handle, &t);
 }
 
-static void IRAM_ATTR w5500_SnCmd(const uint8_t socket, const uint8_t command) {
+static void w5500_SnCmd(const uint8_t socket, const uint8_t command) {
     w5500_write_u8(SnCR(socket), command); // Socket command
     while (w5500_read_u8(SnCR(socket))); // Wait for command to complete
 }
 
-static void IRAM_ATTR w5500_SnCmd_noWait(const uint8_t socket, const uint8_t command) {
+static void w5500_SnCmd_noWait(const uint8_t socket, const uint8_t command) {
     w5500_write_u8(SnCR(socket), command);
 }
 
-static void IRAM_ATTR w5500_reset() {
+static void w5500_reset() {
     w5500_write_u8(_MR, MR_RESET); //soft reset
     while (w5500_read_u8(_MR) & MR_RESET)
         vTaskDelay(pdMS_TO_TICKS(1)); // Wait for reset to complete
 }
 
-static void IRAM_ATTR w5500_spi_init(const w5500_config_t* config) {
+static void w5500_spi_init(const w5500_config_t* config) {
 
     spi_bus_config_t buscfg = {
         .mosi_io_num = config->pin_mosi,
@@ -120,7 +120,7 @@ static void IRAM_ATTR w5500_spi_init(const w5500_config_t* config) {
     ESP_LOGI(TAG, "SPI initialized");
 }
 
-void IRAM_ATTR w5500_init(const w5500_config_t* config) {
+void w5500_init(const w5500_config_t* config) {
 
     w5500_spi_init(config);
 
@@ -151,7 +151,7 @@ void IRAM_ATTR w5500_init(const w5500_config_t* config) {
     ESP_LOGI(TAG, "W5500 initialized successfully");
 }
 
-w5500_recv_t* IRAM_ATTR w5500_recv(const uint16_t len)
+w5500_recv_t* w5500_recv(const uint16_t len)
 {
     static uint16_t rx_rd = 0; // w5500_read_u16(SnRX_RD(0));
 
@@ -179,7 +179,7 @@ w5500_recv_t* IRAM_ATTR w5500_recv(const uint16_t len)
     return &received;
 }
 
-void IRAM_ATTR w5500_send(const uint8_t* buf, const uint16_t len)
+void w5500_send(const uint8_t* buf, const uint16_t len)
 {
     static uint16_t tx_wr = 0; // w5500_read_u16(SnTX_WR(0));
 
@@ -190,7 +190,7 @@ void IRAM_ATTR w5500_send(const uint8_t* buf, const uint16_t len)
     w5500_SnCmd_noWait(0, SnCR_SEND); // SEND command
 }
 
-w5500_recv_t* IRAM_ATTR w5500_data_exchange(const uint16_t recv_len, const uint8_t* send_buf, const uint16_t send_len)
+w5500_recv_t* w5500_data_exchange(const uint16_t recv_len, const uint8_t* send_buf, const uint16_t send_len)
 {
     // send
 

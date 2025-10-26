@@ -28,6 +28,15 @@ HAL2UDP supports the first 3 motors using the exact Jackpot/FluidNC bit assignme
 Additional motors available in Jackpot (not used by HAL2UDP):
 - Motor 3 (A): I2SO.13 (step), I2SO.12 (dir), I2SO.15 (disable)
 - Motor 4 (B): I2SO.18 (step), I2SO.17 (dir), I2SO.16 (disable)
+ 
+## Note about HAL2UDP firmware support
+
+Currently HAL2UDP's built-in step generation (`stepgen_task`) is implemented for 3 axes (X, Y, Z). That means:
+
+- Motors 0..2 (I2SO.0..I2SO.10) are directly supported by the real-time step generation logic.
+- Motors 3 and 4 (I2SO.12..I2SO.18) are exposed as I2S outputs and documented in `src/hardware.h`, so they can be used as auxiliary motor outputs or for custom wiring, but they are not driven by HAL2UDP's `stepgen_task` by default.
+
+If you want full runtime support for 5 independent axes driven by HAL2UDP, the firmware needs to be extended (add timers/step engines and expand the comm/stepgen data structures). I can prepare a plan and implement that if you'd like.
 
 ## Hardware Compatibility
 

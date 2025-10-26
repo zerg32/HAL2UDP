@@ -42,4 +42,10 @@ void app_main(void)
     xTaskCreatePinnedToCore(watchdog_task, "watchdog_task", 2048, NULL, 1, NULL, 0);
     xSemaphoreTake(startMutex, portMAX_DELAY);
     xTaskCreatePinnedToCore(stepgen_task, "stepgen_task", 4096, NULL, 1, NULL, 1);
+
+#ifdef ENABLE_I2S_TEST
+    // Start minimal I2S hardware test task (pulses motors 3 & 4)
+    extern void i2s_test_task(void* arg);
+    xTaskCreatePinnedToCore(i2s_test_task, "i2s_test", 2048, NULL, 1, NULL, 1);
+#endif
 }
