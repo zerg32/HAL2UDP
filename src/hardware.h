@@ -98,6 +98,37 @@
 #define W5500_INT_PIN   39
 
 /*==================================================================*/
+/* I2S Output Configuration (for shift register control)           */
+/* Uncomment USE_I2S_OUT to enable I2S mode for step/dir signals   */
+/*==================================================================*/
+
+// #define USE_I2S_OUT
+
+#ifdef USE_I2S_OUT
+    // I2S pins for shift register control (e.g., 74HC595)
+    #define I2S_WS_PIN      26  // RCLK (Register/Latch Clock)
+    #define I2S_BCK_PIN     27  // SRCLK (Shift Register Clock)
+    #define I2S_DATA_PIN    32  // SER (Serial Data)
+    
+    // I2S pulse width in microseconds (1, 2, or 4)
+    #define I2S_PULSE_US    2
+    
+    // I2S pin mapping for step/dir signals
+    // Map to shift register bit positions (0-31)
+    #define I2S_STEP_0_BIT  0
+    #define I2S_DIR_0_BIT   1
+    #define I2S_STEP_1_BIT  2
+    #define I2S_DIR_1_BIT   3
+    #define I2S_STEP_2_BIT  4
+    #define I2S_DIR_2_BIT   5
+    
+    // Optional: Map outputs to I2S as well
+    // #define I2S_OUT_00_BIT  6
+    // #define I2S_OUT_01_BIT  7
+    // etc...
+#endif
+
+/*==================================================================*/
 
 #define STEP_0_PIN 12
 #define STEP_0_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT12)

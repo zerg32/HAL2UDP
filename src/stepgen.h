@@ -10,6 +10,10 @@
 #include "globals.h"
 #include "hardware.h"
 
+#ifdef USE_I2S_OUT
+#include "i2s_out.h"
+#endif
+
 //#define timer_0_set_alarm_value(alarm_val) timer_group_set_alarm_value_in_isr(TIMER_GROUP_0, TIMER_0, alarm_val)
 #define timer_0_set_alarm_value(alarm_val) TIMERG0.hw_timer[0].alarmlo.tx_alarm_lo = alarm_val
 // #define timer_0_set_alarm_value(alarm_val) TIMERG0.hw_timer[0].alarm_low = alarm_val
@@ -43,8 +47,48 @@
 //#define timer_2_clear_interrupt TIMERG1.int_clr_timers.t0 = 1
 
 //#define timer_2_enable_alarm timer_group_enable_alarm_in_isr(TIMER_GROUP_1, TIMER_0)
-#define timer_2_enable_alarm TIMERG1.hw_timer[0].config.tx_alarm_en = 1
+//#define timer_2_enable_alarm TIMERG1.hw_timer[0].config.tx_alarm_en = 1
 //#define timer_2_enable_alarm TIMERG1.hw_timer[0].config.alarm_en = 1
+
+/*==================================================================*/
+/* Step/Dir pin control macros - support both GPIO and I2S modes   */
+/*==================================================================*/
+
+#ifdef USE_I2S_OUT
+    // I2S mode - write to shift register via I2S FIFO
+    #define STEP_0_H i2s_out_write(I2S_STEP_0_BIT, 1)
+    #define STEP_0_L i2s_out_write(I2S_STEP_0_BIT, 0)
+    #define DIR_0_H i2s_out_write(I2S_DIR_0_BIT, 1)
+    #define DIR_0_L i2s_out_write(I2S_DIR_0_BIT, 0)
+
+    #define STEP_1_H i2s_out_write(I2S_STEP_1_BIT, 1)
+    #define STEP_1_L i2s_out_write(I2S_STEP_1_BIT, 0)
+    #define DIR_1_H i2s_out_write(I2S_DIR_1_BIT, 1)
+    #define DIR_1_L i2s_out_write(I2S_DIR_1_BIT, 0)
+
+    #define STEP_2_H i2s_out_write(I2S_STEP_2_BIT, 1)
+    #define STEP_2_L i2s_out_write(I2S_STEP_2_BIT, 0)
+    #define DIR_2_H i2s_out_write(I2S_DIR_2_BIT, 1)
+    #define DIR_2_L i2s_out_write(I2S_DIR_2_BIT, 0)
+#else
+    // Direct GPIO mode - use register writes (default)
+    #define STEP_0_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT12)
+    #define STEP_0_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT12)
+    #define DIR_0_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT13)
+    #define DIR_0_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT13)
+
+    #define STEP_1_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT16)
+    #define STEP_1_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT16)
+    #define DIR_1_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT17)
+    #define DIR_1_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT17)
+
+    #define STEP_2_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT21)
+    #define STEP_2_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT21)
+    #define DIR_2_H REGISTER_WRITE(GPIO_OUT_W1TS_REG, BIT22)
+    #define DIR_2_L REGISTER_WRITE(GPIO_OUT_W1TC_REG, BIT22)
+#endif
+
+/*==================================================================*/
 
 void IRAM_ATTR timer_0_isr(void* arg)
 {
@@ -223,6 +267,8 @@ void inline IRAM_ATTR acceleration(const int i)
 
 void IRAM_ATTR stepgen_task(void* arg)
 {
+#ifndef USE_I2S_OUT
+    // Direct GPIO mode - initialize step/dir pins
     gpio_reset_pin((gpio_num_t)STEP_0_PIN);
     gpio_set_direction((gpio_num_t)STEP_0_PIN, GPIO_MODE_OUTPUT);
 
@@ -240,6 +286,8 @@ void IRAM_ATTR stepgen_task(void* arg)
 
     gpio_reset_pin((gpio_num_t)DIR_2_PIN);
     gpio_set_direction((gpio_num_t)DIR_2_PIN, GPIO_MODE_OUTPUT);
+#endif
+    // Note: In I2S mode, pins are initialized in i2s_out_init()
 
     timer__init(TIMER_GROUP_0, TIMER_0);
     timer__init(TIMER_GROUP_0, TIMER_1);
